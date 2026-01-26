@@ -11,7 +11,19 @@ from whisperx.utils import (LANGUAGES, TO_LANGUAGE_CODE, optional_float,
 def cli():
     # fmt: off
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("audio", nargs="+", type=str, help="audio file(s) to transcribe")
+    
+    # Server mode flag
+    parser.add_argument("--serve", action="store_true", help="Start REST API server instead of transcribing")
+    
+    # Audio files (required for transcription, ignored for server mode)
+    parser.add_argument("audio", nargs="*", type=str, help="audio file(s) to transcribe")
+    
+    # Server options (only used when --serve is set)
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="(server mode) Host to bind the server to")
+    parser.add_argument("--port", type=int, default=8000, help="(server mode) Port to bind the server to")
+    parser.add_argument("--workers", type=int, default=1, help="(server mode) Number of worker processes")
+    parser.add_argument("--log-level", type=str, default="info", choices=["debug", "info", "warning", "error", "critical"], help="(server mode) Logging level")
+    
     parser.add_argument("--model", default="small", help="name of the Whisper model to use")
     parser.add_argument("--model_cache_only", type=str2bool, default=False, help="If True, will not attempt to download models, instead using cached models from --model_dir")
     parser.add_argument("--model_dir", type=str, default=None, help="the path to save model files; uses ~/.cache/whisper by default")
@@ -78,11 +90,26 @@ def cli():
     parser.add_argument("--python-version", "-P", action="version", version=f"Python {platform.python_version()} ({platform.python_implementation()})",help="Show python version information and exit")
     # fmt: on
 
-    args = parser.parse_args().__dict__
+    args = parser.parse_args()
+    args_dict = vars(args)
 
-    from whisperx.transcribe import transcribe_task
-
-    transcribe_task(args, parser)
+    # Handle --serve flag
+    if args_dict.get("serve"):
+        # Start REST API server
+        from whisperx.server import start_server
+        start_server(
+            host=args_dict["host"],
+            port=args_dict["port"],
+            workers=args_dict["workers"],
+            log_level=args_dict["log_level"]
+        )
+    else:
+        # Run transcription task
+        if not args_dict.get("audio"):
+            parser.error("the following arguments are required: audio")
+        
+        from whisperx.transcribe import transcribe_task
+        transcribe_task(args_dict, parser)
 
 
 if __name__ == "__main__":
