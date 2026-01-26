@@ -1,312 +1,160 @@
-<h1 align="center">WhisperX</h1>
+# docker-whisperX
 
-## Recall.ai - Meeting Transcription API
+[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) ![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/04-build-matrix-images.yml?label=Docker%20Build)
 
-If you’re looking for a transcription API for meetings, consider checking out [Recall.ai's Meeting Transcription API](https://www.recall.ai/product/meeting-transcription-api?utm_source=github&utm_medium=sponsorship&utm_campaign=mbain-whisperx), an API that works with Zoom, Google Meet, Microsoft Teams, and more. Recall.ai diarizes by pulling the speaker data and separate audio streams from the meeting platforms, which means 100% accurate speaker diarization with actual speaker names.
+This is the docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX) from the community.
 
+The objective of this project is to efficiently manage the continuous integration docker build workflow on the ***GitHub Free runner*** on a ***weekly basis***. Which includes building ***175*** Docker images ***in parallel***, each with a size of ***10GB.*** To ensure smooth operation, I have concentrated on utilizing docker layer caches efficiently, maximizing layer reuse, carefully managing cache read/write order to prevent any issues, and optimizing to minimize image size and build time.
 
-<p align="center">
-  <a href="https://github.com/m-bain/whisperX/stargazers">
-    <img src="https://img.shields.io/github/stars/m-bain/whisperX.svg?colorA=orange&colorB=orange&logo=github"
-         alt="GitHub stars">
-  </a>
-  <a href="https://github.com/m-bain/whisperX/issues">
-        <img src="https://img.shields.io/github/issues/m-bain/whisperx.svg"
-             alt="GitHub issues">
-  </a>
-  <a href="https://github.com/m-bain/whisperX/blob/master/LICENSE">
-        <img src="https://img.shields.io/github/license/m-bain/whisperX.svg"
-             alt="GitHub license">
-  </a>
-  <a href="https://arxiv.org/abs/2303.00747">
-        <img src="http://img.shields.io/badge/Arxiv-2303.00747-B31B1B.svg"
-             alt="ArXiv paper">
-  </a>
-  <a href="https://twitter.com/intent/tweet?text=&url=https%3A%2F%2Fgithub.com%2Fm-bain%2FwhisperX">
-  <img src="https://img.shields.io/twitter/url/https/github.com/m-bain/whisperX.svg?style=social" alt="Twitter">
-  </a>      
-</p>
+Additionally, for my personal preference, I am dedicated to following best practices, industry standards and policies to the best of my ability.
 
-<img width="1216" align="center" alt="whisperx-arch" src="https://raw.githubusercontent.com/m-bain/whisperX/refs/heads/main/figures/pipeline.png">
+Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or pull the image from [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
-<!-- <p align="left">Whisper-Based Automatic Speech Recognition (ASR) with improved timestamp accuracy + quality via forced phoneme alignment and voice-activity based batching for fast inference.</p> -->
+## 🚀 Get your Docker ready for GPU support
 
-<!-- <h2 align="left", id="what-is-it">What is it 🔎</h2> -->
+### Windows
 
-This repository provides fast automatic speech recognition (70x realtime with large-v2) with word-level timestamps and speaker diarization.
+Once you have installed **Docker Desktop**, **CUDA Toolkit**, **NVIDIA Windows Driver**, and ensured that your Docker is running with **WSL2**, you are ready to go.
 
-- ⚡️ Batched inference for 70x realtime transcription using whisper large-v2
-- 🪶 [faster-whisper](https://github.com/guillaumekln/faster-whisper) backend, requires <8GB gpu memory for large-v2 with beam_size=5
-- 🎯 Accurate word-level timestamps using wav2vec2 alignment
-- 👯‍♂️ Multispeaker ASR using speaker diarization from [pyannote-audio](https://github.com/pyannote/pyannote-audio) (speaker ID labels)
-- 🗣️ VAD preprocessing, reduces hallucination & batching with no WER degradation
+Here is the official documentation for further reference.  
+<https://docs.nvidia.com/cuda/wsl-user-guide/index.html#nvidia-compute-software-support-on-wsl-2>
+<https://docs.docker.com/desktop/wsl/use-wsl/#gpu-support>
 
-**Whisper** is an ASR model [developed by OpenAI](https://github.com/openai/whisper), trained on a large dataset of diverse audio. Whilst it does produces highly accurate transcriptions, the corresponding timestamps are at the utterance-level, not per word, and can be inaccurate by several seconds. OpenAI's whisper does not natively support batching.
+### Linux, OSX
 
-**Phoneme-Based ASR** A suite of models finetuned to recognise the smallest unit of speech distinguishing one word from another, e.g. the element p in "tap". A popular example model is [wav2vec2.0](https://huggingface.co/facebook/wav2vec2-large-960h-lv60-self).
+Install an NVIDIA GPU Driver if you do not already have one installed.  
+<https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html>
 
-**Forced Alignment** refers to the process by which orthographic transcriptions are aligned to audio recordings to automatically generate phone level segmentation.
+Install the NVIDIA Container Toolkit with this guide.  
+<https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html>
 
-**Voice Activity Detection (VAD)** is the detection of the presence or absence of human speech.
+> [!TIP]  
+> I have a Chinese blog about this topic:  
+> [Podman GPU Configuration Notes for Fedora/RHEL](https://xn--jgy.tw/Container/configuring-gpu-in-linux-podman/)
 
-**Speaker Diarization** is the process of partitioning an audio stream containing human speech into homogeneous segments according to the identity of each speaker.
+## 📦 Available Pre-built Image
 
-<h2 align="left", id="highlights">New🚨</h2>
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/04-build-matrix-images.yml?label=Docker%20Build) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=Date)
 
-- 1st place at [Ego4d transcription challenge](https://eval.ai/web/challenges/challenge-page/1637/leaderboard/3931/WER) 🏆
-- _WhisperX_ accepted at INTERSPEECH 2023
-- v3 transcript segment-per-sentence: using nltk sent_tokenize for better subtitlting & better diarization
-- v3 released, 70x speed-up open-sourced. Using batched whisper with [faster-whisper](https://github.com/guillaumekln/faster-whisper) backend!
-- v2 released, code cleanup, imports whisper library VAD filtering is now turned on by default, as in the paper.
-- Paper drop🎓👨‍🏫! Please see our [ArxiV preprint](https://arxiv.org/abs/2303.00747) for benchmarking and details of WhisperX. We also introduce more efficient batch inference resulting in large-v2 with \*60-70x REAL TIME speed.
-
-<h2 align="left" id="setup">Setup ⚙️</h2>
-
-### 0. CUDA Installation
-
-To use WhisperX with GPU acceleration, install the CUDA toolkit 12.8 before WhisperX. Skip this step if using only the CPU.
-
-- For **Linux** users, install the CUDA toolkit 12.8 following this guide:
-  [CUDA Installation Guide for Linux](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/).
-- For **Windows** users, download and install the CUDA toolkit 12.8:
-  [CUDA Downloads](https://developer.nvidia.com/cuda-12-8-1-download-archive).
-
-### 1. Simple Installation (Recommended)
-
-The easiest way to install WhisperX is through PyPi:
+> [!NOTE]  
+> The WhisperX code base in these images aligns with the git submodule commit hash.  
+> I have [a scheduled CI workflow](https://github.com/jim60105/docker-whisperX/actions/workflows/submodule_update.yml) runs weekly to target on [the main branch](https://github.com/m-bain/whisperX/tree/main) and rebuild all docker images.
 
 ```bash
-pip install whisperx
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:base-en     -- --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-ja -- --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:no_model    -- --model tiny --language en --output_format srt audio.mp3
 ```
 
-Or if using [uvx](https://docs.astral.sh/uv/guides/tools/#running-tools):
+The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de` or `large-v3-zh`.  
+Please be aware that the whisper models `*.en`,  `large-v1`, `large-v2` have been excluded as I believe they are not frequently used. If you require these models, please refer to the following section to build them on your own.
+
+You can find the actual build matrix in [04-build-matrix-images.yml](.github/workflows/04-build-matrix-images.yml) and all available tags at [ghcr.io](https://github.com/jim60105/docker-whisperX/pkgs/container/whisperx/versions?filters%5Bversion_type%5D=tagged).
+
+In addition, there is also a `no_model` tag that does not include any pre-downloaded models, also referred to as `latest`.
+
+> Added a `distil-large-v3-en` model.  
+> Only en, distil model seems to only support English.
+
+## ⚡️ Preserve the download cache for the align models when working with various languages
+
+You can mount the `/.cache` to share align models between containers.  
+Please use tag `no_model` (`latest`) for this scenario.
 
 ```bash
-uvx whisperx
+docker run --gpus all -it -v ".:/app" -v whisper_cache:/.cache ghcr.io/jim60105/whisperx:latest -- --model large-v3 --language en --output_format srt audio.mp3
 ```
 
-### 2. Advanced Installation Options
+## 🛠️ Building the Docker Image
 
-These installation methods are for developers or users with specific needs. If you're not sure, stick with the simple installation above.
+> [!IMPORTANT]  
+> Clone the Git repository recursively to include submodules:  
+> `git clone --recursive https://github.com/jim60105/docker-whisperX.git`
 
-#### Option A: Install from GitHub
+### Build Arguments
 
-To install directly from the GitHub repository:
+The [Dockerfile](Dockerfile) builds the image contained models. It accepts two build arguments: `WLANG` and `WHISPER_MODEL`.
+
+- `WLANG`: The language to transcribe. The default is `en`. See [supported languages in load_align_model.py](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py).
+- `WHISPER_MODEL`: The model name. The default is `base`. See [fast-whisper](https://huggingface.co/Systran) for supported models.
+
+In case of multiple language alignments needed, use space separated list of languages `"LANG=pl fr en"` when building the image. Also note that WhisperX is not doing well to handle multiple languages within the same audio file. Even if you do not provide the language parameter, it will still recognize the language (or fallback to en) and use it for choosing the alignment model. Alignment models are language specific. **This instruction is simply for embedding multiple alignment models into a docker image.**
+
+### Build Command
+
+For example, if you want to build the image with `en` language and `large-v3` model:
 
 ```bash
-uvx git+https://github.com/m-bain/whisperX.git
+docker build --build-arg WLANG=en --build-arg WHISPER_MODEL=large-v3 -t whisperx:large-v3-en .
 ```
 
-#### Option B: Developer Installation
-
-If you want to modify the code or contribute to the project:
+If you want to build the image without any pre-downloaded models:
 
 ```bash
-git clone https://github.com/m-bain/whisperX.git
-cd whisperX
-uv sync --all-extras --dev
+docker build --target no_model -t whisperx:no_model .
 ```
 
-> **Note**: The development version may contain experimental features and bugs. Use the stable PyPI release for production environments.
+If you want to build all images at once, we have [a Docker bake file](docker-bake.hcl) available:
 
-You may also need to install ffmpeg, rust etc. Follow openAI instructions here https://github.com/openai/whisper#setup.
-
-### Speaker Diarization
-
-To **enable Speaker Diarization**, include your Hugging Face access token (read) that you can generate from [Here](https://huggingface.co/settings/tokens) after the `--hf_token` argument and accept the user agreement for the following models: [Segmentation](https://huggingface.co/pyannote/segmentation-3.0) and [Speaker-Diarization-3.1](https://huggingface.co/pyannote/speaker-diarization-3.1) (if you choose to use Speaker-Diarization 2.x, follow requirements [here](https://huggingface.co/pyannote/speaker-diarization) instead.)
-
-> **Note**<br>
-> As of Oct 11, 2023, there is a known issue regarding slow performance with pyannote/Speaker-Diarization-3.0 in whisperX. It is due to dependency conflicts between faster-whisper and pyannote-audio 3.0.0. Please see [this issue](https://github.com/m-bain/whisperX/issues/499) for more details and potential workarounds.
-
-<h2 align="left" id="example">Usage 💬 (command line)</h2>
-
-### English
-
-Run whisper on example segment (using default params, whisper small) add `--highlight_words True` to visualise word timings in the .srt file.
-
-    whisperx path/to/audio.wav
-
-Result using _WhisperX_ with forced alignment to wav2vec2.0 large:
-
-https://user-images.githubusercontent.com/36994049/208253969-7e35fe2a-7541-434a-ae91-8e919540555d.mp4
-
-Compare this to original whisper out the box, where many transcriptions are out of sync:
-
-https://user-images.githubusercontent.com/36994049/207743923-b4f0d537-29ae-4be2-b404-bb941db73652.mov
-
-For increased timestamp accuracy, at the cost of higher gpu mem, use bigger models (bigger alignment model not found to be that helpful, see paper) e.g.
-
-    whisperx path/to/audio.wav --model large-v2 --align_model WAV2VEC2_ASR_LARGE_LV60K_960H --batch_size 4
-
-To label the transcript with speaker ID's (set number of speakers if known e.g. `--min_speakers 2` `--max_speakers 2`):
-
-    whisperx path/to/audio.wav --model large-v2 --diarize --highlight_words True
-
-To run on CPU instead of GPU (and for running on Mac OS X):
-
-    whisperx path/to/audio.wav --compute_type int8
-
-### Other languages
-
-The phoneme ASR alignment model is _language-specific_, for tested languages these models are [automatically picked from torchaudio pipelines or huggingface](https://github.com/m-bain/whisperX/blob/f2da2f858e99e4211fe4f64b5f2938b007827e17/whisperx/alignment.py#L24-L58).
-Just pass in the `--language` code, and use the whisper `--model large`.
-
-Currently default models provided for `{en, fr, de, es, it}` via torchaudio pipelines and many other languages via Hugging Face. Please find the list of currently supported languages under `DEFAULT_ALIGN_MODELS_HF` on [alignment.py](https://github.com/m-bain/whisperX/blob/main/whisperx/alignment.py). If the detected language is not in this list, you need to find a phoneme-based ASR model from [huggingface model hub](https://huggingface.co/models) and test it on your data.
-
-#### E.g. German
-
-    whisperx --model large-v2 --language de path/to/audio.wav
-
-https://user-images.githubusercontent.com/36994049/208298811-e36002ba-3698-4731-97d4-0aebd07e0eb3.mov
-
-See more examples in other languages [here](EXAMPLES.md).
-
-## Python usage 🐍
-
-```python
-import whisperx
-import gc
-
-device = "cuda"
-audio_file = "audio.mp3"
-batch_size = 16 # reduce if low on GPU mem
-compute_type = "float16" # change to "int8" if low on GPU mem (may reduce accuracy)
-
-# 1. Transcribe with original whisper (batched)
-model = whisperx.load_model("large-v2", device, compute_type=compute_type)
-
-# save model to local path (optional)
-# model_dir = "/path/"
-# model = whisperx.load_model("large-v2", device, compute_type=compute_type, download_root=model_dir)
-
-audio = whisperx.load_audio(audio_file)
-result = model.transcribe(audio, batch_size=batch_size)
-print(result["segments"]) # before alignment
-
-# delete model if low on GPU resources
-# import gc; import torch; gc.collect(); torch.cuda.empty_cache(); del model
-
-# 2. Align whisper output
-model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
-result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
-
-print(result["segments"]) # after alignment
-
-# delete model if low on GPU resources
-# import gc; import torch; gc.collect(); torch.cuda.empty_cache(); del model_a
-
-# 3. Assign speaker labels
-diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=YOUR_HF_TOKEN, device=device)
-
-# add min/max number of speakers if known
-diarize_segments = diarize_model(audio)
-# diarize_model(audio, min_speakers=min_speakers, max_speakers=max_speakers)
-
-result = whisperx.assign_word_speakers(diarize_segments, result)
-print(diarize_segments)
-print(result["segments"]) # segments are now assigned speaker IDs
+```bash
+docker buildx bake build no_model ubi-no_model
 ```
 
-## Demos 🚀
+### Usage Command
 
-[![Replicate (large-v3](https://img.shields.io/static/v1?label=Replicate+WhisperX+large-v3&message=Demo+%26+Cloud+API&color=blue)](https://replicate.com/victor-upmeet/whisperx)
-[![Replicate (large-v2](https://img.shields.io/static/v1?label=Replicate+WhisperX+large-v2&message=Demo+%26+Cloud+API&color=blue)](https://replicate.com/daanelson/whisperx)
-[![Replicate (medium)](https://img.shields.io/static/v1?label=Replicate+WhisperX+medium&message=Demo+%26+Cloud+API&color=blue)](https://replicate.com/carnifexer/whisperx)
+Mount the current directory as `/app` and run WhisperX with additional input arguments:
 
-If you don't have access to your own GPUs, use the links above to try out WhisperX.
-
-<h2 align="left" id="whisper-mod">Technical Details 👷‍♂️</h2>
-
-For specific details on the batching and alignment, the effect of VAD, as well as the chosen alignment model, see the preprint [paper](https://www.robots.ox.ac.uk/~vgg/publications/2023/Bain23/bain23.pdf).
-
-To reduce GPU memory requirements, try any of the following (2. & 3. can affect quality):
-
-1.  reduce batch size, e.g. `--batch_size 4`
-2.  use a smaller ASR model `--model base`
-3.  Use lighter compute type `--compute_type int8`
-
-Transcription differences from openai's whisper:
-
-1. Transcription without timestamps. To enable single pass batching, whisper inference is performed `--without_timestamps True`, this ensures 1 forward pass per sample in the batch. However, this can cause discrepancies the default whisper output.
-2. VAD-based segment transcription, unlike the buffered transcription of openai's. In the WhisperX paper we show this reduces WER, and enables accurate batched inference
-3. `--condition_on_prev_text` is set to `False` by default (reduces hallucination)
-
-<h2 align="left" id="limitations">Limitations ⚠️</h2>
-
-- Transcript words which do not contain characters in the alignment models dictionary e.g. "2014." or "£13.60" cannot be aligned and therefore are not given a timing.
-- Overlapping speech is not handled particularly well by whisper nor whisperx
-- Diarization is far from perfect
-- Language specific wav2vec2 model is needed
-
-<h2 align="left" id="contribute">Contribute 🧑‍🏫</h2>
-
-If you are multilingual, a major way you can contribute to this project is to find phoneme models on huggingface (or train your own) and test them on speech for the target language. If the results look good send a pull request and some examples showing its success.
-
-Bug finding and pull requests are also highly appreciated to keep this project going, since it's already diverging from the original research scope.
-
-<h2 align="left" id="coming-soon">TODO 🗓</h2>
-
-- [x] Multilingual init
-
-- [x] Automatic align model selection based on language detection
-
-- [x] Python usage
-
-- [x] Incorporating speaker diarization
-
-- [x] Model flush, for low gpu mem resources
-
-- [x] Faster-whisper backend
-
-- [x] Add max-line etc. see (openai's whisper utils.py)
-
-- [x] Sentence-level segments (nltk toolbox)
-
-- [x] Improve alignment logic
-
-- [ ] update examples with diarization and word highlighting
-
-- [ ] Subtitle .ass output <- bring this back (removed in v3)
-
-- [ ] Add benchmarking code (TEDLIUM for spd/WER & word segmentation)
-
-- [x] Allow silero-vad as alternative VAD option
-
-- [ ] Improve diarization (word level). _Harder than first thought..._
-
-<h2 align="left" id="contact">Contact/Support 📇</h2>
-
-Contact maxhbain@gmail.com for queries.
-
-<a href="https://www.buymeacoffee.com/maxhbain" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
-
-<h2 align="left" id="acks">Acknowledgements 🙏</h2>
-
-This work, and my PhD, is supported by the [VGG (Visual Geometry Group)](https://www.robots.ox.ac.uk/~vgg/) and the University of Oxford.
-
-Of course, this is builds on [openAI's whisper](https://github.com/openai/whisper).
-Borrows important alignment code from [PyTorch tutorial on forced alignment](https://pytorch.org/tutorials/intermediate/forced_alignment_with_torchaudio_tutorial.html)
-And uses the wonderful pyannote VAD / Diarization https://github.com/pyannote/pyannote-audio
-
-Valuable VAD & Diarization Models from:
-
-- [pyannote audio][https://github.com/pyannote/pyannote-audio]
-- [silero vad][https://github.com/snakers4/silero-vad]
-
-Great backend from [faster-whisper](https://github.com/guillaumekln/faster-whisper) and [CTranslate2](https://github.com/OpenNMT/CTranslate2)
-
-Those who have [supported this work financially](https://www.buymeacoffee.com/maxhbain) 🙏
-
-Finally, thanks to the OS [contributors](https://github.com/m-bain/whisperX/graphs/contributors) of this project, keeping it going and identifying bugs.
-
-<h2 align="left" id="cite">Citation</h2>
-If you use this in your research, please cite the paper:
-
-```bibtex
-@article{bain2022whisperx,
-  title={WhisperX: Time-Accurate Speech Transcription of Long-Form Audio},
-  author={Bain, Max and Huh, Jaesung and Han, Tengda and Zisserman, Andrew},
-  journal={INTERSPEECH 2023},
-  year={2023}
-}
+```bash
+docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format srt audio.mp3
 ```
+
+> [!NOTE]  
+> Remember to prepend `--` before the arguments.  
+> `--model` and `--language` args are defined in Dockerfile, no need to specify.
+
+## ⛑️ Red Hat UBI based Image
+
+![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/01-build-base-images.yml?label=Docker%20Build)
+
+I have created an alternative [ubi.Dockerfile](ubi.Dockerfile) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
+
+> [!TIP]
+> With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. -- [Red Hat blog](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
+
+It is important to mention that it is *NOT* necessary obtaining a license from Red Hat to use UBI, however, if you are the subscriber and runs it on RHEL/OpenShift, you may get supports from Red Hat.
+
+Despite my initial hesitation, I made the decision not to utilize the *UBI* version as the default image. The *Python official image* has a significantly larger user base compared to *UBI*, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the *UBI* version a try.
+
+Please refer to [the latest vulnerability scan report](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml?query=is%3Asuccess) from our scanning workflow artifact. You can see that the *UBI* version has fewer vulnerabilities compared to the *Python official image* version.
+
+You can get the pre-built image at tag `ubi-no_model`. Notice that only `no_model` is available. Feel free to build your own image with the [ubi.Dockerfile](ubi.Dockerfile) for your needs. This Dockerfile supports the same build arguments as the default one.
+
+```bash
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model tiny --language en --output_format srt audio.mp3
+```
+
+> [!WARNING]
+> ***DISCLAIMER***:  
+> I have created the image in accordance with the specifications outlined in the [Red Hat Container Certification Requirement](https://access.redhat.com/documentation/en-us/red_hat_software_certification/8.72/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction) but I am not going to pursue the actual [certification](https://connect.redhat.com/en/partner-with-us/red-hat-container-certification).
+
+## 📝 LICENSE
+
+> The main program, WhisperX, is distributed under [the BSD-4 license](https://github.com/m-bain/whisperX/blob/main/LICENSE).  
+> Please consult their repository for access to the source code and license.
+
+The Dockerfile and CI workflow files in this repository are licensed under [the MIT license](LICENSE).
+
+## 🌟 Star History
+
+<a href="https://www.star-history.com/#jim60105/docker-whisperX&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=jim60105/docker-whisperX&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=jim60105/docker-whisperX&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=jim60105/docker-whisperX&type=Date" />
+ </picture>
+</a>
+
+
+Podman 
+
+podman build --build-arg WLANG=fr --build-arg WHISPER_MODEL=large-v3 -t whisperx:large-v3-en .
