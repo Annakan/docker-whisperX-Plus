@@ -1,0 +1,3 @@
+[submodule "whisperX-Plus"]
+	path = whisperX-Plus
+	url = git@github.com:Annakan/whisperX-Plus.git
