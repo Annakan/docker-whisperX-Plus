@@ -4,7 +4,6 @@ ARG LANG=en
 ARG UID=1001
 ARG VERSION=EDGE
 ARG RELEASE=0
-ARG PYTHON_VERSION=3.13
 
 # These ARGs are for caching stage builds in CI
 # Leave them as is when building locally
@@ -34,6 +33,23 @@ WORKDIR /tmp
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
+########################################
+# Base stage for arm64
+########################################
+#FROM docker.io/library/python:3.11-slim-bullseye AS prepare_base_arm64
+#
+## RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+#ARG TARGETARCH
+#ARG TARGETVARIANT
+#
+#WORKDIR /tmp
+#
+## Missing dependencies for arm64 (needed for build-time and run-time)
+## https://github.com/jim60105/docker-whisperX/issues/14
+#RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/apt \
+#    --mount=type=cache,id=aptlists-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/lib/apt/lists \
+#    apt-get update && apt-get install -y --no-install-recommends \
+#    libgomp1 libsndfile1
 
 # Select the base stage by target architecture
 FROM prepare_base_$TARGETARCH$TARGETVARIANT AS base
@@ -55,19 +71,18 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV UV_PROJECT_ENVIRONMENT=/venv
 ENV VIRTUAL_ENV=/venv
 ENV UV_LINK_MODE=copy
-#ENV UV_PYTHON_DOWNLOADS=0
-ARG PYTHON_VERSION
-ENV UV_PYTHON=${PYTHON_VERSION}
+ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_PYTHON=3.11
 
 # Install whisperX dependencies
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
-    --mount=type=bind,source=whisperX-Plus/pyproject.toml,target=pyproject.toml \
-    --mount=type=bind,source=whisperX-Plus/uv.lock,target=uv.lock \
+    --mount=type=bind,source=whisperX/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=whisperX/uv.lock,target=uv.lock \
     uv sync --frozen --no-dev --no-install-project --no-editable
 
 # Install whisperX project
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
-    --mount=source=whisperX-Plus,target=.,rw \
+    --mount=source=whisperX,target=.,rw \
     uv sync --frozen --no-dev --no-editable
 
 ########################################
@@ -75,14 +90,14 @@ RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/ro
 ########################################
 FROM base AS no_model
 
-## We don't need them anymore
-#RUN pip uninstall -y pip wheel && \
-#    rm -rf /root/.cache/pip
+# We don't need them anymore
+RUN pip3.11 uninstall -y pip wheel && \
+    rm -rf /root/.cache/pip
 
 # Create user
 ARG UID
-RUN groupadd -g $UID G$UID && \
-    useradd -l -u $UID -g $UID -m -s /bin/sh -N U$UID
+RUN groupadd -g $UID $UID && \
+    useradd -l -u $UID -g $UID -m -s /bin/sh -N $UID
 
 ARG CACHE_HOME
 ARG CONFIG_HOME
@@ -105,28 +120,21 @@ COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:8.0 /ffmpeg /usr/local/bin
 # dumb-init
 COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:8.0 /dumb-init /usr/local/bin/
 
-# uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/
-
-# Install Python via uv
-ARG PYTHON_VERSION
-RUN uv python install ${PYTHON_VERSION}
-
 # Copy licenses (OpenShift Policy)
-#COPY --link --chown=$UID:0 --chmod=775 LICENSE /licenses/LICENSE
-#COPY --link --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
+COPY --link --chown=$UID:0 --chmod=775 LICENSE /licenses/LICENSE
+COPY --link --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
 
 # Copy dependencies and code (and support arbitrary uid for OpenShift best practice)
 # https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images
 COPY --link --chown=$UID:0 --chmod=775 --from=build /venv /venv
 
-ENV PATH="/root/.local/bin:/venv/bin${PATH:+:${PATH}}"
-ENV PYTHONPATH="/venv/lib/python${PYTHON_VERSION}/site-packages"
-ENV LD_LIBRARY_PATH="/venv/lib/python${PYTHON_VERSION}/site-packages/nvidia/cudnn/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV PATH="/venv/bin${PATH:+:${PATH}}"
+ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
+ENV LD_LIBRARY_PATH="/venv/lib/python3.11/site-packages/nvidia/cudnn/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # Test whisperX
 RUN python3 -c 'import whisperx;' && \
-    whisperx --help
+    whisperx -h
 
 WORKDIR /app
 
@@ -140,13 +148,13 @@ ENTRYPOINT [ "dumb-init", "--", "/bin/sh", "-c", "whisperx \"$@\"" ]
 
 ARG VERSION
 ARG RELEASE
-LABEL name="gryon/docker-whisperX" \
+LABEL name="jim60105/docker-whisperX" \
     # Authors for WhisperX
     vendor="Bain, Max and Huh, Jaesung and Han, Tengda and Zisserman, Andrew" \
     # Maintainer for this docker image
-    maintainer="Gryom" \
+    maintainer="jim60105" \
     # Dockerfile source repository
-    url="https://github.com/Annakan/docker-whisperX-Plus" \
+    url="https://github.com/jim60105/docker-whisperX" \
     version=${VERSION} \
     # This should be a number, incremented with each change
     release=${RELEASE} \
@@ -210,7 +218,7 @@ ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
 
 # Take the first language from LANG env variable
-ENTRYPOINT [ "dumb-init", "--", "/bin/sh", "-c", "WLANG=$(echo ${WLANG} | cut -d ' ' -f1); W_MODEL=\"${WHISPER_MODEL}\" W_LANG=\"${WLANG}\" whisperx \"$@\"" ]
+ENTRYPOINT [ "dumb-init", "--", "/bin/sh", "-c", "WLANG=$(echo ${WLANG} | cut -d ' ' -f1); whisperx --model \"${WHISPER_MODEL}\" --language \"${WLANG}\" \"$@\"" ]
 
 ARG VERSION
 ARG RELEASE
